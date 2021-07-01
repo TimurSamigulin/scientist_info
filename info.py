@@ -1,7 +1,7 @@
 import os
 import re
 import io
-
+import logging
 
 class Information:
     """
@@ -68,19 +68,110 @@ class Information:
 
         return fio_dict
 
-    def get_info(self, text):
+    def find_word(self, text: str, word: str):
+        """
+        Ищем наличия слова в биографии
+        :param text: текст
+        :param word: слово
+        :return: возвращем bool найденно или нет, и позицию вхождения, -1 если не найденно
+        """
+        pos = text.find(word)
+        if pos == -1:
+            return False, pos
+        else:
+            return True, pos
+
+    def find_staff(self, text) -> dict:
+        """
+        Ищем должности\научные степени в тексте
+        :param text: текст
+        :return: dict -> title: bool
+        """
+        staff = {
+            'postgraduate': False,
+            'dean': False,
+            'director': False,
+            'doctoral candidate': False,
+            'associate professor': False,
+            'assoc. prof.': False,
+            'docent': False,
+            'head of department': False,
+            'research assistant': False,
+            'research officer': False,
+            'full professor': False,
+            'lecturer': False,
+            'professor': False,
+            'applicant': False,
+            'senior research officer': False,
+            'senior lecturer': False,
+            'rector': False,
+            'deputy rector': False,
+            'chancellor': False,
+            'vice-chancellor': False,
+            'president': False,
+            'vice-president': False,
+            'ph.d.': False,
+            'advanced doctor': False,
+        }
+        text = self.text_lower(text)
+        for key in staff:
+            staff[key] = self.find_word(text, key)
+
+        return staff
+
+    def text_token(self, text):
+        """
+        Токенизация текста по темам
+        :param text: текст
+        :return: список токенов по темам текста
+        """
+        from nltk.tokenize.texttiling import TextTilingTokenizer
+        ttt = TextTilingTokenizer()
+        theme_tokens = ttt.tokenize(text)
+        logger.info(f'theme_token = {len(theme_tokens)}')
+        return theme_tokens
+
+    def check_info(self, text, fio):
+        """
+        Делит текст на токены структурно и возвращет только те в которых было совпадение по фио.
+        :param text:
+        :param fio:
+        :return:
+        """
+        theme_tokens = self.text_token(text)
+        have_info = []
+        for token in theme_tokens:
+            fio_dict = self.find_fio(token, fio)
+            for name in fio_dict:
+                if fio_dict[name]:
+                    have_info.append(token)
+                    break
+        logger.info(f'have_info = {len(have_info)}')
+        return have_info
+
+    def check_title(self, text):
+        pass
+
+
+    def get_info(self, text, fio):
         """
         Функция конструктор
         :param text: текст с информацией о человеке
         :return:
         """
+
         emails = self.get_email(text)
         phones = self.get_phone(text)
         urls = self.get_url(text)
+        staff = self.find_staff(text)
+        have_info = self.check_info(text, fio)
 
-        name = 'Ahmadi Matthew N'
-        print(self.find_fio(text, name))
-        print(f'{emails}, {phones}, {urls}')
+
+
+        # print(self.check_info(text, 'Carroll Maria B'))
+        # name = 'Ahmadi Matthew N'
+        # print(self.find_fio(text, name))
+        # print(f'{emails}, {phones}, {urls}')
 
 
 def get_files(path):
@@ -103,16 +194,21 @@ def get_files(path):
 
     return files_dict
 
-
 if __name__ == '__main__':
-    file_path = 'data/foreign-dataset/Ahmadi Matthew N/0_www.umass.edu.txt'
-    f = io.open(file_path)
-    text = f.read()
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(name)s %(levelname)s:%(message)s')
+    logger = logging.getLogger(__name__)
 
     information = Information()
-    # information.get_info(text)
 
     path = 'data/foreign-dataset'
     files = get_files(path)
+    for name, path in files.items():
+        for file in path:
+            f = io.open(file)
+            text = f.read()
+            information.get_info(text, name)
+            f.close()
 
     exit()
