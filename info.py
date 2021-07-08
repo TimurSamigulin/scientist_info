@@ -2,6 +2,9 @@ import os
 import re
 import io
 import logging
+from nltk.tokenize.simple import LineTokenizer
+from nltk.tokenize.texttiling import TextTilingTokenizer
+
 
 class Information:
     """
@@ -14,6 +17,7 @@ class Information:
         :param text: текст
         :return: list emails
         """
+
         pattern = r'[\w\.-]+@[\w\.-]+'
         emails = re.findall(pattern, text)
         return emails
@@ -24,6 +28,7 @@ class Information:
         :param text: текст
         :return: list номеров
         """
+
         pattern = r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]'
         phones = re.findall(pattern, text)
         return phones
@@ -34,6 +39,7 @@ class Information:
         :param text: текст
         :return: list URLs
         """
+
         pattern = r'(https?://[^\"\s>]+)'
         urls = re.findall(pattern, text)
         return urls
@@ -44,6 +50,7 @@ class Information:
         :param text: текст
         :return: текст в нижнем регистре
         """
+
         return text.lower()
 
     def find_fio(self, text: str, fio: str) -> dict:
@@ -53,6 +60,7 @@ class Information:
         :param fio: фио
         :return: словарь с именем и True если найдено, False не найдено
         """
+
         fio = [name for name in fio.split(' ') if len(name) > 2]
         fio_dict = {}
         if text.find(' '.join(fio)) == -1:
@@ -75,18 +83,65 @@ class Information:
         :param word: слово
         :return: возвращем bool найденно или нет, и позицию вхождения, -1 если не найденно
         """
+
         pos = text.find(word)
         if pos == -1:
             return False, pos
         else:
             return True, pos
 
-    def find_staff(self, text) -> dict:
+    def line_token(self, text):
+        """
+        Токенизация по строкам, пустые пропускаем
+        :param text: текст
+        :return: токены
+        """
+        text = self.text_lower(text)
+        tokens = LineTokenizer(blanklines='discard').tokenize(text)
+        tokens = [token.strip() for token in tokens]
+
+
+        return tokens
+
+    def find_depart(self, tokens):
+        """
+        Find Department
+        :param tokens: токены по линиям
+        :return: факультет
+        """
+        for token in tokens:
+            if 'department of' in token:
+                return token
+
+    def find_facult(self, tokens):
+        """
+        Find facult
+        :param tokens: токены по линиям
+        :return: факультеты
+        """
+        for token in tokens:
+            if 'faculty of' in token:
+                return token
+
+    def find_univer_info(self, text):
+        """
+        Информация об университете, факультет и кафедра
+        :param text: текст
+        :return: факультет, кафедра
+        """
+        text = self.text_lower(text)
+        tokens = self.line_token(text)
+        depart = self.find_depart(tokens)
+        facult = self.find_facult(tokens)
+        return depart, facult
+
+    def find_staff(self, text):
         """
         Ищем должности\научные степени в тексте
         :param text: текст
         :return: dict -> title: bool
         """
+
         staff = {
             'postgraduate': False,
             'dean': False,
@@ -103,6 +158,7 @@ class Information:
             'professor': False,
             'applicant': False,
             'senior research officer': False,
+            'assistant professor': False,
             'senior lecturer': False,
             'rector': False,
             'deputy rector': False,
@@ -115,9 +171,14 @@ class Information:
         }
         text = self.text_lower(text)
         for key in staff:
-            staff[key] = self.find_word(text, key)
+            staff[key] = self.find_word(text, key)[0]
 
-        return staff
+        res_staff = []
+        for key, items in staff.items():
+            if items:
+                res_staff.append(key)
+
+        return res_staff
 
     def text_token(self, text):
         """
@@ -125,7 +186,8 @@ class Information:
         :param text: текст
         :return: список токенов по темам текста
         """
-        from nltk.tokenize.texttiling import TextTilingTokenizer
+
+
         ttt = TextTilingTokenizer()
         theme_tokens = ttt.tokenize(text)
         logger.info(f'theme_token = {len(theme_tokens)}')
@@ -138,7 +200,11 @@ class Information:
         :param fio:
         :return:
         """
-        theme_tokens = self.text_token(text)
+
+        try:
+            theme_tokens = self.text_token(text)
+        except ValueError:
+            theme_tokens = [text]
         have_info = []
         for token in theme_tokens:
             fio_dict = self.find_fio(token, fio)
@@ -149,9 +215,42 @@ class Information:
         logger.info(f'have_info = {len(have_info)}')
         return have_info
 
-    def check_title(self, text):
-        pass
 
+    def check_section(self, tokens):
+        """
+        Ищем в тексте секции, разделы
+        :param tokens: токены
+        :return: найденые разделы, секции и их текст
+        """
+        sections = ['teaching area', 'conferences', 'journals', 'book chapter', 'research', 'membership', 'employment',
+                    'overview', 'qualification', 'about me', 'contact', 'biography', 'publications']
+        info = {}
+        for sec_index, section in enumerate(sections):
+            for tok_index, token in enumerate(tokens):
+                if section in token:
+                    if info.get(section, False):
+                        try:
+                            info[section] += '\n' + tokens[tok_index + 1]
+                        except IndexError:
+                            info[section] += '\n' + tokens[tok_index]
+                    else:
+                        try:
+                            info[section] = tokens[tok_index + 1]
+                        except IndexError:
+                            info[section] = tokens[tok_index]
+
+        return info
+
+    def get_section(self, text):
+        """
+        Токенизируем текст и Ищем в тексте секции, разделы
+        :param tokens: текст
+        :return: найденые разделы, секции и их текст
+        """
+        tokens = self.line_token(text)
+        info = self.check_section(tokens)
+
+        return info
 
     def get_info(self, text, fio):
         """
@@ -159,19 +258,24 @@ class Information:
         :param text: текст с информацией о человеке
         :return:
         """
+        info = {}
 
-        emails = self.get_email(text)
-        phones = self.get_phone(text)
-        urls = self.get_url(text)
-        staff = self.find_staff(text)
-        have_info = self.check_info(text, fio)
+        info['emails'] = ' '.join(self.get_email(text))
+        info['phones'] = ' '.join(self.get_phone(text))
+        info['urls'] = ' '.join(self.get_url(text))
+        info['staff'] = ' '.join(self.find_staff(text))
 
+        depart, faculty = self.find_univer_info(text)
+        info['depart'] = depart
+        info['faculty'] = faculty
 
+        section_info = self.get_section(text)
+        for key, item in section_info.items():
+            info[key] = item
 
-        # print(self.check_info(text, 'Carroll Maria B'))
-        # name = 'Ahmadi Matthew N'
-        # print(self.find_fio(text, name))
-        # print(f'{emails}, {phones}, {urls}')
+        info['info'] = ' '.join(self.check_info(text, fio))
+
+        return info
 
 
 def get_files(path):
@@ -180,13 +284,14 @@ def get_files(path):
     :param path: путь до нужной директории с папками ученых
     :return: словарь ученный: list файлов с информацией
     """
+
     dirs = os.listdir(path=path)
 
     files_dict = {}
     for dir in dirs:
         files = os.listdir(path=path + '/' + dir)
         for file in files:
-            if file.split('.')[-1] in ['txt', 'pdf']:
+            if file.split('.')[-1] in ['txt']:
                 if files_dict.get(dir, False):
                     files_dict[dir].append(f'{path}/{dir}/{file}')
                 else:
@@ -194,21 +299,50 @@ def get_files(path):
 
     return files_dict
 
-if __name__ == '__main__':
 
+def write_info(files, outputpath):
+    """
+    получаем инфо со страницы и запись в файл
+    :param files:
+    :return:
+    """
+    for name, path in files.items():
+        logger.info(f'name = {name}')
+        for file in path:
+            f = io.open(file, encoding='utf-8')
+            text = f.read()
+
+            dirpath = outputpath + name
+
+            if not os.path.exists(dirpath):
+                os.makedirs(dirpath)
+
+            info = information.get_info(text, name)
+
+            wpath = dirpath + '/' + file.split('/')[-1]
+            with open(wpath, 'w', encoding='utf-8') as fw:
+                for key, item in info.items():
+                    if (item != 'None') or (item.strip() != ''):
+                        fw.write(f"{key}:\n{item}\n")
+
+            f.close()
+            fw.close()
+
+
+if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
 
     information = Information()
 
-    path = 'data/foreign-dataset'
+    path = 'data/english_new'
     files = get_files(path)
-    for name, path in files.items():
-        for file in path:
-            f = io.open(file)
-            text = f.read()
-            information.get_info(text, name)
-            f.close()
+    write_info(files, 'data/output-eng-new/')
+
+    # path_file = 'data/english_new/Ahmed Md Raihan/0_0.txt'
+    # f = io.open(path_file)
+    # text = f.read()
+    # print(information.get_info(text, 'Ahmed Md Raihan'))
 
     exit()
