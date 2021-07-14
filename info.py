@@ -29,7 +29,7 @@ class Information:
         :return: list номеров
         """
 
-        pattern = r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]'
+        pattern = r'[\+\(]?[1-9][0-9 \-\(\)]{8,22}[0-9]'
         phones = re.findall(pattern, text)
         return phones
 
@@ -135,13 +135,25 @@ class Information:
         facult = self.find_facult(tokens)
         return depart, facult
 
-    def find_staff(self, text):
+    def find_staff(self, text, staff):
         """
         Ищем должности\научные степени в тексте
         :param text: текст
         :return: dict -> title: bool
         """
 
+        text = self.text_lower(text)
+        for key in staff:
+            staff[key] = self.find_word(text, key)[0]
+
+        res_staff = []
+        for key, items in staff.items():
+            if items:
+                res_staff.append(key)
+
+        return res_staff
+
+    def get_staff(self, text):
         staff = {
             'postgraduate': False,
             'dean': False,
@@ -169,16 +181,8 @@ class Information:
             'ph.d.': False,
             'advanced doctor': False,
         }
-        text = self.text_lower(text)
-        for key in staff:
-            staff[key] = self.find_word(text, key)[0]
 
-        res_staff = []
-        for key, items in staff.items():
-            if items:
-                res_staff.append(key)
-
-        return res_staff
+        return self.find_staff(text, staff)
 
     def text_token(self, text):
         """
@@ -187,24 +191,23 @@ class Information:
         :return: список токенов по темам текста
         """
 
-
         ttt = TextTilingTokenizer()
-        theme_tokens = ttt.tokenize(text)
-        logger.info(f'theme_token = {len(theme_tokens)}')
+        try:
+            theme_tokens = ttt.tokenize(text)
+            logger.info(f'theme_token = {len(theme_tokens)}')
+        except ValueError:
+            theme_tokens = [text]
+
         return theme_tokens
 
-    def check_info(self, text, fio):
+    def check_info(self, theme_tokens, fio):
         """
         Делит текст на токены структурно и возвращет только те в которых было совпадение по фио.
-        :param text:
-        :param fio:
+        :param theme_tokens: тематические токены
+        :param fio: фамилия имя очество
         :return:
         """
 
-        try:
-            theme_tokens = self.text_token(text)
-        except ValueError:
-            theme_tokens = [text]
         have_info = []
         for token in theme_tokens:
             fio_dict = self.find_fio(token, fio)
@@ -216,14 +219,13 @@ class Information:
         return have_info
 
 
-    def check_section(self, tokens):
+    def check_section(self, tokens, sections):
         """
         Ищем в тексте секции, разделы
         :param tokens: токены
         :return: найденые разделы, секции и их текст
         """
-        sections = ['teaching area', 'conferences', 'journals', 'book chapter', 'research', 'membership', 'employment',
-                    'overview', 'qualification', 'about me', 'contact', 'biography', 'publications']
+
         info = {}
         for sec_index, section in enumerate(sections):
             for tok_index, token in enumerate(tokens):
@@ -241,16 +243,22 @@ class Information:
 
         return info
 
-    def get_section(self, text):
+    def get_section(self, tokens):
+        sections = ['designation', 'teaching area', 'conferences', 'journals', 'book chapter', 'research', 'membership', 'employment',
+                    'overview', 'qualification', 'about me', 'contact', 'biography', 'publications']
+        return self.check_section(tokens, sections)
+
+    def get_section_info(self, text):
         """
         Токенизируем текст и Ищем в тексте секции, разделы
         :param tokens: текст
         :return: найденые разделы, секции и их текст
         """
         tokens = self.line_token(text)
-        info = self.check_section(tokens)
+        info = self.get_section(tokens)
 
         return info
+
 
     def get_info(self, text, fio):
         """
@@ -260,20 +268,23 @@ class Information:
         """
         info = {}
 
+        theme_tokens = self.text_token(text)
+
         info['emails'] = ' '.join(self.get_email(text))
         info['phones'] = ' '.join(self.get_phone(text))
         info['urls'] = ' '.join(self.get_url(text))
-        info['staff'] = ' '.join(self.find_staff(text))
 
         depart, faculty = self.find_univer_info(text)
         info['depart'] = depart
         info['faculty'] = faculty
 
-        section_info = self.get_section(text)
+        section_info = self.get_section_info('\n'.join(theme_tokens))
         for key, item in section_info.items():
             info[key] = item
 
-        info['info'] = ' '.join(self.check_info(text, fio))
+        info['staff'] = ' '.join(self.get_staff('\n'.join(theme_tokens)))
+
+        info['info'] = ' '.join(self.check_info(theme_tokens, fio))
 
         return info
 
@@ -338,11 +349,11 @@ if __name__ == '__main__':
 
     path = 'data/english_new'
     files = get_files(path)
-    write_info(files, 'data/output-eng-new/')
-
-    # path_file = 'data/english_new/Ahmed Md Raihan/0_0.txt'
-    # f = io.open(path_file)
-    # text = f.read()
-    # print(information.get_info(text, 'Ahmed Md Raihan'))
+    write_info(files, 'data/output-eng-new-test/')
 
     exit()
+
+if __name__ == 'info':
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(name)s %(levelname)s:%(message)s')
+    logger = logging.getLogger(__name__)
