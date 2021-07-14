@@ -4,6 +4,7 @@ import io
 import logging
 from nltk.tokenize.simple import LineTokenizer
 from nltk.tokenize.texttiling import TextTilingTokenizer
+from info_rus import InformationRus
 
 
 class Information:
@@ -78,7 +79,7 @@ class Information:
 
     def find_word(self, text: str, word: str):
         """
-        Ищем наличия слова в биографии
+        Ищем наличия слова в тексте
         :param text: текст
         :param word: слово
         :return: возвращем bool найденно или нет, и позицию вхождения, -1 если не найденно
@@ -92,7 +93,7 @@ class Information:
 
     def line_token(self, text):
         """
-        Токенизация по строкам, пустые пропускаем
+        Токенизация по строкам, пустые строки выкидываем
         :param text: текст
         :return: токены
         """
@@ -100,12 +101,11 @@ class Information:
         tokens = LineTokenizer(blanklines='discard').tokenize(text)
         tokens = [token.strip() for token in tokens]
 
-
         return tokens
 
     def find_depart(self, tokens):
         """
-        Find Department
+        Ищем название факуьтета
         :param tokens: токены по линиям
         :return: факультет
         """
@@ -115,7 +115,7 @@ class Information:
 
     def find_facult(self, tokens):
         """
-        Find facult
+        Ищем название кафедры
         :param tokens: токены по линиям
         :return: факультеты
         """
@@ -125,7 +125,7 @@ class Information:
 
     def find_univer_info(self, text):
         """
-        Информация об университете, факультет и кафедра
+        Ищем информация об факультете и кафедре
         :param text: текст
         :return: факультет, кафедра
         """
@@ -137,9 +137,9 @@ class Information:
 
     def find_staff(self, text, staff):
         """
-        Ищем должности\научные степени в тексте
+        Ищем должности \ научные степени в тексте
         :param text: текст
-        :return: dict -> title: bool
+        :return: список найденных степеней и должностей
         """
 
         text = self.text_lower(text)
@@ -154,6 +154,11 @@ class Information:
         return res_staff
 
     def get_staff(self, text):
+        """
+        Возвращает список найденных степеней и должностей в тексте
+        :param text:
+        :return:
+        """
         staff = {
             'postgraduate': False,
             'dean': False,
@@ -202,7 +207,7 @@ class Information:
 
     def check_info(self, theme_tokens, fio):
         """
-        Делит текст на токены структурно и возвращет только те в которых было совпадение по фио.
+        Получает структурно разделеенные токены по темам и возвращет только те в которых было совпадение по фио.
         :param theme_tokens: тематические токены
         :param fio: фамилия имя очество
         :return:
@@ -218,12 +223,12 @@ class Information:
         logger.info(f'have_info = {len(have_info)}')
         return have_info
 
-
     def check_section(self, tokens, sections):
         """
         Ищем в тексте секции, разделы
-        :param tokens: токены
-        :return: найденые разделы, секции и их текст
+        :param tokens: токены разделение по строкам
+        :param sections: список секций
+        :return: найденые секций и их предполгаемое содержимое
         """
 
         info = {}
@@ -244,7 +249,13 @@ class Information:
         return info
 
     def get_section(self, tokens):
-        sections = ['designation', 'teaching area', 'conferences', 'journals', 'book chapter', 'research', 'membership', 'employment',
+        """
+        Вызываем метод для поиска секций и передает ему список названий секций на английском
+        :param tokens: токены разделеные по строкам
+        :return: словарь найденных секций и их содержимое
+        """
+        sections = ['designation', 'teaching area', 'conferences', 'journals', 'book chapter', 'research', 'membership',
+                    'employment',
                     'overview', 'qualification', 'about me', 'contact', 'biography', 'publications']
         return self.check_section(tokens, sections)
 
@@ -252,19 +263,19 @@ class Information:
         """
         Токенизируем текст и Ищем в тексте секции, разделы
         :param tokens: текст
-        :return: найденые разделы, секции и их текст
+        :return: словарь найденых разделов, секций и их содержимое
         """
         tokens = self.line_token(text)
         info = self.get_section(tokens)
 
         return info
 
-
     def get_info(self, text, fio):
         """
         Функция конструктор
         :param text: текст с информацией о человеке
-        :return:
+        :param fio: ФИО человека
+        :return: всю найденую информацию об человека из переданого текста
         """
         info = {}
 
@@ -323,10 +334,19 @@ def write_info(files, outputpath):
             f = io.open(file, encoding='utf-8')
             text = f.read()
 
+            information = Information()
+            information_rus = InformationRus()
+
             dirpath = outputpath + name
 
             if not os.path.exists(dirpath):
                 os.makedirs(dirpath)
+
+            rus = re.findall(r"[А-Яа-я]", text)
+            if len(rus) > 30:
+                info = information_rus.get_info(text, name)
+            else:
+                info = information.get_info(text, name)
 
             info = information.get_info(text, name)
 
@@ -345,7 +365,6 @@ if __name__ == '__main__':
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
 
-    information = Information()
 
     path = 'data/english_new'
     files = get_files(path)

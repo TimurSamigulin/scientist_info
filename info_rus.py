@@ -71,7 +71,7 @@ def write_info(files, outputpath):
                 os.makedirs(dirpath)
 
             rus = re.findall(r"[А-Яа-я]", text)
-            if len(rus) > 20:
+            if len(rus) > 30:
                 info = information_rus.get_info(text, name)
             else:
                 info = information.get_info(text, name)
@@ -98,3 +98,8 @@ if __name__ == '__main__':
     write_info(files, 'data/output-ru-4/')
 
     exit()
+
+if __name__ == 'info_rus':
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(name)s %(levelname)s:%(message)s')
+    logger = logging.getLogger(__name__)
