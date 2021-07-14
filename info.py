@@ -2,9 +2,10 @@ import os
 import re
 import io
 import logging
+import json
 from nltk.tokenize.simple import LineTokenizer
 from nltk.tokenize.texttiling import TextTilingTokenizer
-from info_rus import InformationRus
+import info_rus
 
 
 class Information:
@@ -12,7 +13,7 @@ class Information:
     Класс для получения информации о пользователе из текста
     """
 
-    def get_email(self, text) -> list:
+    def get_email(self, text: str) -> list:
         """
         Функция для получения email из текста
         :param text: текст
@@ -23,7 +24,7 @@ class Information:
         emails = re.findall(pattern, text)
         return emails
 
-    def get_phone(self, text) -> list:
+    def get_phone(self, text: str) -> list:
         """
         Функция для получения номеров телефона из текста
         :param text: текст
@@ -34,7 +35,7 @@ class Information:
         phones = re.findall(pattern, text)
         return phones
 
-    def get_url(self, text) -> list:
+    def get_url(self, text: str) -> list:
         """
         Функция для получения url из текста
         :param text: текст
@@ -45,7 +46,7 @@ class Information:
         urls = re.findall(pattern, text)
         return urls
 
-    def text_lower(self, text: str):
+    def text_lower(self, text: str) -> str:
         """
         Приведит текст к нижнему регистру
         :param text: текст
@@ -59,7 +60,7 @@ class Information:
         Функция, которая ищет наличие fio в тексте.
         :param text: текст
         :param fio: фио
-        :return: словарь с именем и True если найдено, False не найдено
+        :return: словарь с частями фио и True если найдено, False не найдено
         """
 
         fio = [name for name in fio.split(' ') if len(name) > 2]
@@ -82,7 +83,7 @@ class Information:
         Ищем наличия слова в тексте
         :param text: текст
         :param word: слово
-        :return: возвращем bool найденно или нет, и позицию вхождения, -1 если не найденно
+        :return: возвращет tuple - bool найденно или нет, и позицию вхождения, -1 если не найденно
         """
 
         pos = text.find(word)
@@ -91,9 +92,25 @@ class Information:
         else:
             return True, pos
 
-    def line_token(self, text):
+    def theme_tokenize(self, text: str) -> list:
         """
-        Токенизация по строкам, пустые строки выкидываем
+        Токенизация текста по темам
+        :param text: текст
+        :return: список токенов по темам текста
+        """
+
+        ttt = TextTilingTokenizer()
+        try:
+            theme_tokens = ttt.tokenize(text)
+            logger.info(f'theme_token = {len(theme_tokens)}')
+        except ValueError:
+            theme_tokens = [text]
+
+        return theme_tokens
+
+    def line_token(self, text: str) -> list:
+        """
+        Токенизация по строкам, пустые строки выкидываем. Также приводит к нижнему регистру.
         :param text: текст
         :return: токены
         """
@@ -103,22 +120,24 @@ class Information:
 
         return tokens
 
-    def find_depart(self, tokens):
+    def find_depart(self, tokens: list):
         """
         Ищем название факуьтета
         :param tokens: токены по линиям
         :return: факультет
         """
+
         for token in tokens:
             if 'department of' in token:
                 return token
 
-    def find_facult(self, tokens):
+    def find_facult(self, tokens: list):
         """
         Ищем название кафедры
         :param tokens: токены по линиям
         :return: факультеты
         """
+
         for token in tokens:
             if 'faculty of' in token:
                 return token
@@ -129,10 +148,11 @@ class Information:
         :param text: текст
         :return: факультет, кафедра
         """
-        text = self.text_lower(text)
+
         tokens = self.line_token(text)
         depart = self.find_depart(tokens)
         facult = self.find_facult(tokens)
+
         return depart, facult
 
     def find_staff(self, text, staff):
@@ -188,22 +208,6 @@ class Information:
         }
 
         return self.find_staff(text, staff)
-
-    def text_token(self, text):
-        """
-        Токенизация текста по темам
-        :param text: текст
-        :return: список токенов по темам текста
-        """
-
-        ttt = TextTilingTokenizer()
-        try:
-            theme_tokens = ttt.tokenize(text)
-            logger.info(f'theme_token = {len(theme_tokens)}')
-        except ValueError:
-            theme_tokens = [text]
-
-        return theme_tokens
 
     def check_info(self, theme_tokens, fio):
         """
@@ -279,23 +283,25 @@ class Information:
         """
         info = {}
 
-        theme_tokens = self.text_token(text)
+        theme_tokens = self.theme_tokenize(text)
 
-        info['emails'] = ' '.join(self.get_email(text))
-        info['phones'] = ' '.join(self.get_phone(text))
-        info['urls'] = ' '.join(self.get_url(text))
+        info['emails'] = ';'.join(self.get_email(text))
+        info['phones'] = ';'.join(self.get_phone(text))
+        info['urls'] = ';'.join(self.get_url(text))
 
         depart, faculty = self.find_univer_info(text)
         info['depart'] = depart
         info['faculty'] = faculty
 
-        section_info = self.get_section_info('\n'.join(theme_tokens))
+        section_info = self.get_section_info(text)
         for key, item in section_info.items():
             info[key] = item
 
-        info['staff'] = ' '.join(self.get_staff('\n'.join(theme_tokens)))
+        have_info = '\n'.join(self.check_info(theme_tokens, fio))
 
-        info['info'] = ' '.join(self.check_info(theme_tokens, fio))
+        info['staff'] = ';'.join(self.get_staff(have_info))
+
+        info['info'] = have_info
 
         return info
 
@@ -335,7 +341,7 @@ def write_info(files, outputpath):
             text = f.read()
 
             information = Information()
-            information_rus = InformationRus()
+            information_rus = info_rus.InformationRus()
 
             dirpath = outputpath + name
 
@@ -348,16 +354,14 @@ def write_info(files, outputpath):
             else:
                 info = information.get_info(text, name)
 
-            info = information.get_info(text, name)
-
             wpath = dirpath + '/' + file.split('/')[-1]
             with open(wpath, 'w', encoding='utf-8') as fw:
-                for key, item in info.items():
-                    if (item != 'None') or (item.strip() != ''):
-                        fw.write(f"{key}:\n{item}\n")
+                fw.write(json.dumps(info, indent=4, ensure_ascii=False))
+                # for key, item in info.items():
+                #     if (item != 'None') or (item.strip() != ''):
+                #         fw.write(f"{key}:\n{item}\n")
 
             f.close()
-            fw.close()
 
 
 if __name__ == '__main__':
@@ -365,10 +369,9 @@ if __name__ == '__main__':
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
 
-
-    path = 'data/english_new'
+    path = 'data/new_ru_en'
     files = get_files(path)
-    write_info(files, 'data/output-eng-new-test/')
+    write_info(files, 'data/output-new_ru_en/')
 
     exit()
 
