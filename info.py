@@ -3,8 +3,7 @@ import re
 import io
 import logging
 import json
-from nltk.tokenize.simple import LineTokenizer
-from nltk.tokenize.texttiling import TextTilingTokenizer
+from tokenizers import Tokenizers
 import info_rus
 
 
@@ -33,6 +32,18 @@ class Information:
 
         pattern = r'[\+\(]?[1-9][0-9 \-\(\)]{8,22}[0-9]'
         phones = re.findall(pattern, text)
+        # удаляем номера где меньше 6 и больше 15 цифр, где только одно тире или больше 5.
+        # удаляем номера где меньше 6 и больше 15 цифр, где только одно тире или больше 5.
+        for phone in phones:
+            digits = len(re.findall('[0-9]', phone))
+            if (digits < 6) or (digits > 15):
+                phones.remove(phone)
+                continue
+
+            dash = len(re.findall('-', phone))
+            if (dash == 1) or (dash > 5):
+                phones.remove(phone)
+                continue
         return phones
 
     def get_url(self, text: str) -> list:
@@ -92,33 +103,6 @@ class Information:
         else:
             return True, pos
 
-    def theme_tokenize(self, text: str) -> list:
-        """
-        Токенизация текста по темам
-        :param text: текст
-        :return: список токенов по темам текста
-        """
-
-        ttt = TextTilingTokenizer()
-        try:
-            theme_tokens = ttt.tokenize(text)
-            logger.info(f'theme_token = {len(theme_tokens)}')
-        except ValueError:
-            theme_tokens = [text]
-
-        return theme_tokens
-
-    def line_token(self, text: str) -> list:
-        """
-        Токенизация по строкам, пустые строки выкидываем. Также приводит к нижнему регистру.
-        :param text: текст
-        :return: токены
-        """
-        text = self.text_lower(text)
-        tokens = LineTokenizer(blanklines='discard').tokenize(text)
-        tokens = [token.strip() for token in tokens]
-
-        return tokens
 
     def find_depart(self, tokens: list):
         """
@@ -148,8 +132,9 @@ class Information:
         :param text: текст
         :return: факультет, кафедра
         """
-
-        tokens = self.line_token(text)
+        text = self.text_lower(text)
+        tokenizer = Tokenizers()
+        tokens = tokenizer.line_token(text)
         depart = self.find_depart(tokens)
         facult = self.find_facult(tokens)
 
@@ -159,6 +144,7 @@ class Information:
         """
         Ищем должности \ научные степени в тексте
         :param text: текст
+        :param staff: писок должностей и степеней
         :return: список найденных степеней и должностей
         """
 
@@ -227,6 +213,12 @@ class Information:
         logger.info(f'have_info = {len(have_info)}')
         return have_info
 
+    def delete_space(self, token):
+        token = re.sub(' +', ' ', token)
+        token = re.sub('\t+', '\t', token)
+        token = re.sub('\n+', '\n', token)
+        return token
+
     def check_section(self, tokens, sections):
         """
         Ищем в тексте секции, разделы
@@ -238,17 +230,23 @@ class Information:
         info = {}
         for sec_index, section in enumerate(sections):
             for tok_index, token in enumerate(tokens):
+                token = self.delete_space(token)
                 if section in token:
                     if info.get(section, False):
-                        try:
-                            info[section] += '\n' + tokens[tok_index + 1]
-                        except IndexError:
-                            info[section] += '\n' + tokens[tok_index]
+                        info[section] += ' \n' + tokens[tok_index]
                     else:
-                        try:
-                            info[section] = tokens[tok_index + 1]
-                        except IndexError:
-                            info[section] = tokens[tok_index]
+                        info[section] = tokens[tok_index]
+
+                    # if info.get(section, False):
+                    #     try:
+                    #         info[section] += ' \n ' + tokens[tok_index] + ' \n ' + tokens[tok_index + 1]
+                    #     except IndexError:
+                    #         info[section] += ' \n ' + tokens[tok_index]
+                    # else:
+                    #     try:
+                    #         info[section] = tokens[tok_index] + ' \n ' + tokens[tok_index + 1]
+                    #     except IndexError:
+                    #         info[section] = tokens[tok_index]
 
         return info
 
@@ -259,8 +257,7 @@ class Information:
         :return: словарь найденных секций и их содержимое
         """
         sections = ['designation', 'teaching area', 'conferences', 'journals', 'book chapter', 'research', 'membership',
-                    'employment',
-                    'overview', 'qualification', 'about me', 'contact', 'biography', 'publications']
+                    'employment', 'overview', 'qualification', 'about me', 'contact', 'biography', 'publications']
         return self.check_section(tokens, sections)
 
     def get_section_info(self, text):
@@ -269,7 +266,11 @@ class Information:
         :param tokens: текст
         :return: словарь найденых разделов, секций и их содержимое
         """
-        tokens = self.line_token(text)
+
+        text = self.text_lower(text)
+        tokenizer = Tokenizers()
+        tokens = tokenizer.blank_tokenizer(text)
+        #tokens = self.line_token(text)
         info = self.get_section(tokens)
 
         return info
@@ -283,8 +284,6 @@ class Information:
         """
         info = {}
 
-        theme_tokens = self.theme_tokenize(text)
-
         info['emails'] = ';'.join(self.get_email(text))
         info['phones'] = ';'.join(self.get_phone(text))
         info['urls'] = ';'.join(self.get_url(text))
@@ -297,6 +296,8 @@ class Information:
         for key, item in section_info.items():
             info[key] = item
 
+        tokenizer = Tokenizers()
+        theme_tokens = tokenizer.theme_tokenize(text)
         have_info = '\n'.join(self.check_info(theme_tokens, fio))
 
         info['staff'] = ';'.join(self.get_staff(have_info))
@@ -320,10 +321,17 @@ def get_files(path):
         files = os.listdir(path=path + '/' + dir)
         for file in files:
             if file.split('.')[-1] in ['txt']:
+                file_path = f'{path}/{dir}/{file}'
+
+                # Пропускам файлы больше 400 КБ
+                file_size = os.path.getsize(file_path)
+                if file_size > 400000:
+                    continue
+
                 if files_dict.get(dir, False):
-                    files_dict[dir].append(f'{path}/{dir}/{file}')
+                    files_dict[dir].append(file_path)
                 else:
-                    files_dict[dir] = [f'{path}/{dir}/{file}']
+                    files_dict[dir] = [file_path]
 
     return files_dict
 
@@ -357,9 +365,6 @@ def write_info(files, outputpath):
             wpath = dirpath + '/' + file.split('/')[-1]
             with open(wpath, 'w', encoding='utf-8') as fw:
                 fw.write(json.dumps(info, indent=4, ensure_ascii=False))
-                # for key, item in info.items():
-                #     if (item != 'None') or (item.strip() != ''):
-                #         fw.write(f"{key}:\n{item}\n")
 
             f.close()
 
@@ -371,7 +376,7 @@ if __name__ == '__main__':
 
     path = 'data/new_ru_en'
     files = get_files(path)
-    write_info(files, 'data/output-new_ru_en/')
+    write_info(files, 'data/output-new_ru_en2/')
 
     exit()
 
