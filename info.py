@@ -206,6 +206,7 @@ class Information:
         have_info = []
         for token in theme_tokens:
             fio_dict = self.find_fio(token, fio)
+            token = self.delete_space(token)
             for name in fio_dict:
                 if fio_dict[name]:
                     have_info.append(token)
@@ -233,9 +234,9 @@ class Information:
                 token = self.delete_space(token)
                 if section in token:
                     if info.get(section, False):
-                        info[section] += ' \n' + tokens[tok_index]
+                        info[section] += ' \n' + token
                     else:
-                        info[section] = tokens[tok_index]
+                        info[section] = token
 
                     # if info.get(section, False):
                     #     try:
