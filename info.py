@@ -5,7 +5,7 @@ import logging
 import json
 from tokenizers import Tokenizers
 import info_rus
-
+from google_trans import GoogleTranslator
 
 class Information:
     """
@@ -351,6 +351,7 @@ def write_info(files, outputpath):
 
             information = Information()
             information_rus = info_rus.InformationRus()
+            translator = GoogleTranslator()
 
             dirpath = outputpath + name
 
@@ -359,6 +360,7 @@ def write_info(files, outputpath):
 
             rus = re.findall(r"[А-Яа-я]", text)
             if len(rus) > 30:
+                name = translator.translate_one(name)
                 info = information_rus.get_info(text, name)
             else:
                 info = information.get_info(text, name)
@@ -375,9 +377,9 @@ if __name__ == '__main__':
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
 
-    path = 'data/new_ru_en'
+    path = 'data/new_ru_en_space'
     files = get_files(path)
-    write_info(files, 'data/output-new_ru_en2/')
+    write_info(files, 'data/new_ru_en_space/')
 
     exit()
 
