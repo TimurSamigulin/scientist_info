@@ -379,7 +379,7 @@ if __name__ == '__main__':
 
     path = 'data/new_ru_en_space'
     files = get_files(path)
-    write_info(files, 'data/new_ru_en_space/')
+    write_info(files, 'data/output-new_ru_en_space/')
 
     exit()
 
