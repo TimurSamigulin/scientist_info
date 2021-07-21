@@ -1,6 +1,5 @@
 import requests
 import logging
-import re
 from bs4 import BeautifulSoup
 
 class HabrParser():
@@ -78,3 +77,8 @@ if __name__ == '__main__':
 
     habr_parser = HabrParser()
     print(habr_parser.get_user_info('pawnhearts'))
+
+if __name__ == 'habr_parser':
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(name)s %(levelname)s:%(message)s')
+    logger = logging.getLogger(__name__)
