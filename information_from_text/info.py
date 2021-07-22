@@ -211,7 +211,7 @@ class Information:
                 if fio_dict[name]:
                     have_info.append(token)
                     break
-        logger.info(f'have_info = {len(have_info)}')
+        # logger.info(f'have_info = {len(have_info)}')
         return have_info
 
     def delete_space(self, token):
@@ -269,7 +269,7 @@ class Information:
     def get_section_info(self, text):
         """
         Токенизируем текст и Ищем в тексте секции, разделы
-        :param tokens: текст
+        :param text: текст
         :return: словарь найденых разделов, секций и их содержимое
         """
 
