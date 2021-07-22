@@ -1,9 +1,9 @@
-from info import Information
+from information_from_text.info import Information
 import logging
 import os
 import io
 import re
-from info import get_files
+from information_from_text.info import get_files
 
 class InformationRus(Information):
 
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     information = Information()
     information_rus = InformationRus()
 
-    path = 'data/ru-4'
+    path = '../data/ru-4'
     files = get_files(path)
     write_info(files, 'data/output-ru-4/')
 

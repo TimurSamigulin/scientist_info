@@ -3,9 +3,9 @@ import re
 import io
 import logging
 import json
-from tokenizers import Tokenizers
-import info_rus
-from google_trans import GoogleTranslator
+from information_from_text.tokenizers import Tokenizers
+from information_from_text import info_rus
+from information_from_text.google_trans import GoogleTranslator
 
 class Information:
     """
@@ -32,7 +32,7 @@ class Information:
 
         pattern = r'[\+\(]?[1-9][0-9 \-\(\)]{8,22}[0-9]'
         phones = re.findall(pattern, text)
-        # удаляем номера где меньше 6 и больше 15 цифр, где только одно тире или больше 5.
+
         # удаляем номера где меньше 6 и больше 15 цифр, где только одно тире или больше 5.
         for phone in phones:
             digits = len(re.findall('[0-9]', phone))
@@ -215,6 +215,11 @@ class Information:
         return have_info
 
     def delete_space(self, token):
+        """
+        Удаляем все лишние пробельные символы
+        :param token:
+        :return:
+        """
         token = re.sub(' +', ' ', token)
         token = re.sub('\t+', '\t', token)
         token = re.sub('\n+', '\n', token)
@@ -308,10 +313,11 @@ class Information:
         return info
 
 
-def get_files(path):
+def get_files(path, size_skip_KB=400):
     """
     Получаем список файлов с информацией об ученых
     :param path: путь до нужной директории с папками ученых
+    :param size_skip_KB: максимальный порог размера файлов в КБ, после которого мы пропускаем файлы
     :return: словарь ученный: list файлов с информацией
     """
 
@@ -326,7 +332,8 @@ def get_files(path):
 
                 # Пропускам файлы больше 400 КБ
                 file_size = os.path.getsize(file_path)
-                if file_size > 400000:
+                size_skip_KB *= 1000
+                if file_size > size_skip_KB:
                     continue
 
                 if files_dict.get(dir, False):
@@ -377,7 +384,7 @@ if __name__ == '__main__':
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
 
-    path = 'data/new_ru_en_space'
+    path = '../data/new_ru_en_space'
     files = get_files(path)
     write_info(files, 'data/output-new_ru_en_space/')
 

@@ -33,7 +33,7 @@ class Tokenizers():
         """
         Токенизация по строкам, пустые строки выкидываем. Также приводит к нижнему регистру.
         :param text: текст
-        :return: токены
+        :return: токены разделенные по строкам
         """
 
         tokens = LineTokenizer(blanklines='discard').tokenize(text)
