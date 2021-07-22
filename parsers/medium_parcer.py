@@ -7,6 +7,9 @@ from selenium import webdriver
 
 
 class MediumParcer():
+    """
+    Парсинг информации о пользователе с medium
+    """
 
     def get_url(self, tag):
         if tag[0] == '@':
@@ -40,6 +43,11 @@ class MediumParcer():
         return posts_href
 
     def get_user_info(self, tag):
+        """
+        Получаем список постов пользователя
+        :param tag: никнейм пользователя на сайте
+        :return: ссылки на его статьи
+        """
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
         info = {}

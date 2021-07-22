@@ -6,10 +6,19 @@ import json
 class VcRuParser():
 
     def get_url(self, tag):
+        """
+        Формируем ссылку на профиль
+        :param tag: никнейм на сайте
+        :return:
+        """
         return f'https://vc.ru/u/{tag}'
 
     def get_profile_html(self, url):
-
+        """
+        Код страницы
+        :param url: ссылка на страницу
+        :return:
+        """
         try:
             responce = requests.get(url)
         except OSError:
@@ -19,6 +28,11 @@ class VcRuParser():
         return soup
 
     def get_user_profile_summary(self, soup):
+        """
+        Основная информация из профиля пользователя
+        :param soup:
+        :return:
+        """
         summary = {}
 
         info = soup.find('div', 'l-page__header').textarea.text
@@ -33,6 +47,11 @@ class VcRuParser():
         return summary
 
     def get_user_posts(self, soup):
+        """
+        Возвращает ссылки на посты пользователя
+        :param soup:
+        :return:
+        """
         posts = soup.findAll('div', 'feed__item l-island-round')
         posts_href = []
         for post in posts:
@@ -41,6 +60,11 @@ class VcRuParser():
         return posts_href
 
     def get_user_info(self, tag):
+        """
+        Получаем информацию о пользователи и его посты
+        :param tag: ник пользователя на сайте vc_ru
+        :return: Основная информация с профиля и ссылки на статьи
+        """
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
 

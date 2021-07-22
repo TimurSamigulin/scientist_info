@@ -7,6 +7,11 @@ class HabrParser():
     Класс для парсинга информации о пользователе с habr
     """
     def get_profile_html(self, url):
+        """
+        Получаем html код страницы
+        :param url: ссылка на страницу
+        :return: код страницы
+        """
 
         try:
             responce = requests.get(url)
@@ -17,6 +22,11 @@ class HabrParser():
         return soup
 
     def get_user_counters(self, soup):
+        """
+        Информация о рейтинге с профиля пользователя
+        :param soup: код страницы
+        :return: рейтинг и другие показатели пользователя
+        """
         counters = {}
 
         counters['carma'] = soup.find(href="https://habr.com/ru/info/help/karma/").div.text
@@ -27,6 +37,11 @@ class HabrParser():
         return counters
 
     def get_user_profile_summary(self, soup):
+        """
+        Информация о пользователе с его профиля
+        :param soup: код страницы, soup с BeautifulSoup
+        :return:
+        """
         defination_list = soup.find('ul', 'defination-list')
         summary_li = defination_list.findAll('li')
 
@@ -36,9 +51,12 @@ class HabrParser():
 
         return summary
 
-    def get_user_posts(self, url):
-        url += '/posts/'
-        soup = self.get_profile_html(url)
+    def get_user_posts(self, soup):
+        """
+        Ссылки на посты пользователя
+        :param soup:
+        :return:
+        """
 
         posts = soup.find('div', 'posts_list').ul.findAll('li', 'content-list__item')
 
@@ -49,9 +67,19 @@ class HabrParser():
         return posts_href
 
     def get_url(self, tag):
+        """
+        Формирует url на профиль пользователя
+        :param tag: ник пользователя на хабр
+        :return:
+        """
         return f'https://habr.com/ru/users/{tag}'
 
     def get_user_info(self, tag):
+        """
+        Функция парсит основную информацию о пользователи на Хабр и его посты
+        :param tag: никнейм на хабр
+        :return: dict со всей найденной информацией
+        """
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
 
@@ -64,7 +92,10 @@ class HabrParser():
         for k, v in summary.items():
             info[k] = v
 
-        info['posts'] = self.get_user_posts(url)
+        #меняем url, так как посты на другой странице
+        url += '/posts/'
+        soup = self.get_profile_html(url)
+        info['posts'] = self.get_user_posts(soup)
 
         return info
 
@@ -76,7 +107,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     habr_parser = HabrParser()
-    print(habr_parser.get_user_info('pawnhearts'))
+    print(habr_parser.get_user_info('VictoriaSeredina'))
 
 if __name__ == 'habr_parser':
     logging.basicConfig(level=logging.INFO,

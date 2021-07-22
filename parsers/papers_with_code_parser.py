@@ -35,6 +35,11 @@ class PapersWithCodeParser():
         return papers_href
 
     def get_user_info(self, tag):
+        """
+        Получаем основную информацию о пользователе с сайта papers with parser и ссылки на статьи
+        :param tag: ник на сайте
+        :return: словарь с основной инфой
+        """
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
 
@@ -55,4 +60,10 @@ if __name__ == '__main__':
 
     papers_parser = PapersWithCodeParser()
     print(papers_parser.get_user_info('Oriol Vinyals'))
+
+
+if __name__ == 'papers_with_code_parcer':
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(name)s %(levelname)s:%(message)s')
+    logger = logging.getLogger(__name__)
 
