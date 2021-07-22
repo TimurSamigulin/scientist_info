@@ -41,10 +41,11 @@ class MediumParcer():
 
     def get_user_info(self, tag):
         url = self.get_url(tag)
-        soup = self
+        soup = self.get_profile_html(url)
+        info = {}
+        info['posts'] = self.get_user_posts(soup)
 
-
-
+        return info
 
 
 if __name__ == '__main__':
@@ -53,12 +54,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     medium_parcer = MediumParcer()
-    tag = '@zhlli'
-    url = medium_parcer.get_url('@zhlli')
-
-    soup = medium_parcer.get_profile_html(url)
-    # print(soup.find(href=re.compile(f'/{tag}/followers')).text)
-    print(soup.findAll('h2'))
+    print(medium_parcer.get_user_info('@zhlli'))
 
 
 if __name__ == 'medium_parcer':
