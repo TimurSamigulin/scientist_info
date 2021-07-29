@@ -1,5 +1,6 @@
 import requests
 import logging
+import re
 from bs4 import BeautifulSoup
 from parsers.my_exceptions import page_not_found
 
@@ -87,19 +88,44 @@ class HabrParser():
         if soup.find('div', 'tm-error-message'):
             raise page_not_found.PageNotFound(tag)
 
+    def valid_url(self, tag):
+        """
+        Преобразует юзер тэг в ссылку и проверяет валидность ссылки
+        :param tag:
+        :return:
+        """
+        pattern = r'(https?://[^\"\s>]+)'
+
+        if not re.search(pattern, tag):
+            return self.get_url(tag)
+        else:
+            if tag[-1] == '/':
+                tag = tag[:-1]
+            url = tag.split('/')
+            url = '/'.join(url[:-1])
+
+            if url != 'https://habr.com/ru/users':
+                return None
+            return tag
+
     def get_user_info(self, tag):
         """
         Функция парсит основную информацию о пользователи на Хабр и его посты
-        :param tag: никнейм на хабр
+        :param tag: никнейм на хабр или url
         :return: dict со всей найденной информацией
         """
-        url = self.get_url(tag)
+        url = self.valid_url(tag)
+        if not url:
+            return None
+
+
+
         soup = self.get_profile_html(url)
         try:
             self.check_real_page(soup, tag)
         except page_not_found.PageNotFound:
             logger.info(f'Страница пользователя {tag} не найдена')
-            raise
+            return None
 
 
         info = {}
@@ -126,7 +152,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     habr_parser = HabrParser()
-    print(habr_parser.get_user_info('VictoriaSeredina'))
+    print(habr_parser.get_user_info('https://habr.com/ru/users/pawnhearts/'))
     # print(habr_parser.get_user_info('Victorieredina'))
 
 if __name__ == 'habr_parser':

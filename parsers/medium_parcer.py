@@ -57,7 +57,7 @@ class MediumParcer():
             self.check_real_page(soup, tag)
         except page_not_found.PageNotFound:
             logger.info(f'Страница пользователя {tag} не найдена')
-            raise
+            return None
 
         info = {}
         info['posts'] = self.get_user_posts(soup)
