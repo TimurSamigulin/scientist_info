@@ -71,8 +71,8 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     medium_parcer = MediumParcer()
-    print(medium_parcer.get_user_info('@zhll'))
-    # print(medium_parcer.get_user_info('@zhlli'))
+    # print(medium_parcer.get_user_info('@zhll'))
+    print(medium_parcer.get_user_info('@zhlli'))
 
 
 if __name__ == 'medium_parcer':

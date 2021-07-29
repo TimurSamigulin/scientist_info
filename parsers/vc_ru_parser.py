@@ -2,6 +2,7 @@ import requests
 import logging
 from bs4 import BeautifulSoup
 import json
+from parsers.my_exceptions import page_not_found
 
 class VcRuParser():
 
@@ -59,6 +60,16 @@ class VcRuParser():
 
         return posts_href
 
+    def check_real_page(self, soup, tag):
+        """
+        Проверяем существование страницы пользователя
+        :param soup: soup
+        :param tag: юзер тэг
+        :return: вызывается исключение PageNotFound, если страницы не существует
+        """
+        if soup.find('div', 'error__code'):
+            raise page_not_found.PageNotFound(tag)
+
     def get_user_info(self, tag):
         """
         Получаем информацию о пользователи и его посты
@@ -67,6 +78,12 @@ class VcRuParser():
         """
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
+
+        try:
+            self.check_real_page(soup, tag)
+        except page_not_found.PageNotFound:
+            logger.info(f'Страница пользователя {tag} не найдена')
+            raise
 
         info = {}
         summary = self.get_user_profile_summary(soup)
@@ -84,6 +101,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     vc_ru_parser = VcRuParser()
+    # print(vc_ru_parser.get_user_info('71man'))
     print(vc_ru_parser.get_user_info('781084-masha-cepeleva'))
 
 

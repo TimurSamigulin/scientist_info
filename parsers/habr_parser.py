@@ -124,8 +124,8 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     habr_parser = HabrParser()
-    # print(habr_parser.get_user_info('VictoriaSeredina'))
-    print(habr_parser.get_user_info('Victorieredina'))
+    print(habr_parser.get_user_info('VictoriaSeredina'))
+    # print(habr_parser.get_user_info('Victorieredina'))
 
 if __name__ == 'habr_parser':
     logging.basicConfig(level=logging.INFO,
