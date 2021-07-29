@@ -82,7 +82,7 @@ class VcRuParser():
         pattern = r'(https?://[^\"\s>]+)'
 
         if re.search(pattern, tag):
-            pattern = r'vc.ru/u/'
+            pattern = r'vc\.ru/u/'
             if re.search(pattern, tag):
                 return tag
             else:

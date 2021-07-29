@@ -1,5 +1,6 @@
 import requests
 import logging
+import re
 from bs4 import BeautifulSoup
 from parsers.my_exceptions import page_not_found
 
@@ -44,13 +45,36 @@ class MediumParcer():
         if soup.findAll(string='PAGE NOT FOUND'):
             raise page_not_found.PageNotFound(tag)
 
+    def valid_url(self, tag):
+        """
+        Преобразует юзер тэг в ссылку и проверяет валидность ссылки
+        :param tag:
+        :return:
+        """
+        pattern = r'(https?://[^\"\s>]+)'
+
+        if re.search(pattern, tag):
+            pattern1 = r'medium\.com/@'
+            pattern2 = r'\w+\.medium\.com'
+            if re.search(pattern1, tag):
+                return tag
+            elif re.search(pattern2, tag):
+                return tag
+            else:
+                return None
+        else:
+            return self.get_url(tag)
+
     def get_user_info(self, tag):
         """
         Получаем список постов пользователя
         :param tag: никнейм пользователя на сайте
         :return: ссылки на его статьи
         """
-        url = self.get_url(tag)
+        url = self.valid_url(tag)
+        if not url:
+            return None
+
         soup = self.get_profile_html(url)
 
         try:
@@ -72,7 +96,7 @@ if __name__ == '__main__':
 
     medium_parcer = MediumParcer()
     # print(medium_parcer.get_user_info('@zhll'))
-    print(medium_parcer.get_user_info('@zhlli'))
+    print(medium_parcer.get_user_info('https://medium.com/@zhlli'))
 
 
 if __name__ == 'medium_parcer':
