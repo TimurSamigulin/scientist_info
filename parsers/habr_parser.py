@@ -96,9 +96,7 @@ class HabrParser():
         """
         pattern = r'(https?://[^\"\s>]+)'
 
-        if not re.search(pattern, tag):
-            return self.get_url(tag)
-        else:
+        if re.search(pattern, tag):
             if tag[-1] == '/':
                 tag = tag[:-1]
             url = tag.split('/')
@@ -106,7 +104,10 @@ class HabrParser():
 
             if url != 'https://habr.com/ru/users':
                 return None
+
             return tag
+        else:
+            return self.get_url(tag)
 
     def get_user_info(self, tag):
         """
@@ -117,8 +118,6 @@ class HabrParser():
         url = self.valid_url(tag)
         if not url:
             return None
-
-
 
         soup = self.get_profile_html(url)
         try:

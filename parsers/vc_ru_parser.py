@@ -1,7 +1,8 @@
 import requests
 import logging
-from bs4 import BeautifulSoup
 import json
+import re
+from bs4 import BeautifulSoup
 from parsers.my_exceptions import page_not_found
 
 class VcRuParser():
@@ -72,13 +73,34 @@ class VcRuParser():
         if soup.find('div', 'error__code'):
             raise page_not_found.PageNotFound(tag)
 
+    def valid_url(self, tag):
+        """
+        Преобразует юзер тэг в ссылку и проверяет валидность ссылки
+        :param tag:
+        :return:
+        """
+        pattern = r'(https?://[^\"\s>]+)'
+
+        if re.search(pattern, tag):
+            pattern = r'vc.ru/u/'
+            if re.search(pattern, tag):
+                return tag
+            else:
+                return None
+        else:
+            return self.get_url(tag)
+
+
     def get_user_info(self, tag):
         """
         Получаем информацию о пользователи и его посты
         :param tag: ник пользователя на сайте vc_ru
         :return: Основная информация с профиля и ссылки на статьи
         """
-        url = self.get_url(tag)
+        url = self.valid_url(tag)
+        if not url:
+            return None
+
         soup = self.get_profile_html(url)
 
         try:
@@ -104,7 +126,7 @@ if __name__ == '__main__':
 
     vc_ru_parser = VcRuParser()
     # print(vc_ru_parser.get_user_info('71man'))
-    print(vc_ru_parser.get_user_info('781084-masha-cepeleva'))
+    print(vc_ru_parser.get_user_info('https://vc.ru/u/781084-masha-cepeleva/'))
 
 
 if __name__ == 'vc_ru_parser':
