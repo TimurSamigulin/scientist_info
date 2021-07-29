@@ -1,5 +1,6 @@
 import requests
 import logging
+import re
 from bs4 import BeautifulSoup
 
 class PapersWithCodeParser():
@@ -37,13 +38,33 @@ class PapersWithCodeParser():
 
         return papers_href
 
+    def valid_url(self, tag):
+        """
+        Преобразует юзер тэг в ссылку и проверяет валидность ссылки
+        :param tag:
+        :return:
+        """
+        pattern = r'(https?://[^\"\s>]+)'
+
+        if re.search(pattern, tag):
+            pattern = r'author'
+            if re.search(pattern, tag):
+                return tag
+            else:
+                return None
+        else:
+            return self.get_url(tag)
+
     def get_user_info(self, tag):
         """
         Получаем основную информацию о пользователе с сайта papers with parser и ссылки на статьи
         :param tag: ник на сайте
         :return: словарь с основной инфой
         """
-        url = self.get_url(tag)
+        url = self.valid_url(tag)
+        if not url:
+            return None
+
         soup = self.get_profile_html(url)
 
         info = {}
