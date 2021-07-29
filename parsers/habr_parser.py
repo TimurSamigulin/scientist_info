@@ -1,6 +1,7 @@
 import requests
 import logging
 from bs4 import BeautifulSoup
+from parsers.my_exceptions import page_not_found
 
 class HabrParser():
     """
@@ -74,6 +75,16 @@ class HabrParser():
         """
         return f'https://habr.com/ru/users/{tag}'
 
+    def check_real_page(self, soup, tag):
+        """
+        Проверяем существование страницы пользователя
+        :param soup: soup
+        :param tag: юзер тэг
+        :return: вызывается исключение PageNotFound, если страницы не существует
+        """
+        if soup.find('div', 'tm-error-message'):
+            raise page_not_found.PageNotFound(tag)
+
     def get_user_info(self, tag):
         """
         Функция парсит основную информацию о пользователи на Хабр и его посты
@@ -82,6 +93,12 @@ class HabrParser():
         """
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
+        try:
+            self.check_real_page(soup, tag=tag)
+        except page_not_found.PageNotFound:
+            logger.info(f'Страница пользователя {tag} не найдена')
+            raise
+
 
         info = {}
         counters = self.get_user_counters(soup)
@@ -107,7 +124,8 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     habr_parser = HabrParser()
-    print(habr_parser.get_user_info('VictoriaSeredina'))
+    # print(habr_parser.get_user_info('VictoriaSeredina'))
+    print(habr_parser.get_user_info('Victorieredina'))
 
 if __name__ == 'habr_parser':
     logging.basicConfig(level=logging.INFO,
