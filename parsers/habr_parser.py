@@ -29,10 +29,10 @@ class HabrParser():
         """
         counters = {}
 
-        counters['carma'] = soup.find(href="https://habr.com/ru/info/help/karma/").div.text
-        counters['rating'] = soup.find(href="https://habr.com/ru/info/help/karma/#rating").div.text
-        counters['followers'] = soup.find(href="https://habr.com/ru/users/pawnhearts/subscription/followers/").div.text
-        counters['follow'] = soup.find(href="https://habr.com/ru/users/pawnhearts/subscription/follow/").div.text
+        counters['carma'] = soup.find('div', 'tm-karma__votes').text.strip()
+        counters['rating'] = soup.find('div', 'tm-rating__counter').text.strip()
+        # counters['followers'] = soup.find(href="https://habr.com/ru/users/pawnhearts/subscription/followers/").div.text
+        # counters['follow'] = soup.find(href="https://habr.com/ru/users/pawnhearts/subscription/follow/").div.text
 
         return counters
 
@@ -42,12 +42,12 @@ class HabrParser():
         :param soup: код страницы, soup с BeautifulSoup
         :return:
         """
-        defination_list = soup.find('ul', 'defination-list')
-        summary_li = defination_list.findAll('li')
+        defination_list = soup.find('div', 'tm-user-basic-info')
+        summary_dl = defination_list.findAll('dl')
 
         summary = {}
-        for li in summary_li:
-            summary[li.span.text] = li.find('span', 'defination-list__value').text
+        for dl in summary_dl:
+            summary[dl.dt.text] = dl.dd.text.strip()
 
         return summary
 
@@ -58,11 +58,11 @@ class HabrParser():
         :return:
         """
 
-        posts = soup.find('div', 'posts_list').ul.findAll('li', 'content-list__item')
+        posts = soup.find('div', 'tm-sub-page__main').findAll('article', 'tm-articles-list__item')
 
         posts_href = []
         for post in posts:
-            posts_href.append(post.article.h2.a['href'])
+            posts_href.append('https://habr.com' + post.div.h2.a['href'])
 
         return posts_href
 
