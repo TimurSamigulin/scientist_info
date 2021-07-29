@@ -56,7 +56,9 @@ class VcRuParser():
         posts = soup.findAll('div', 'feed__item l-island-round')
         posts_href = []
         for post in posts:
-            posts_href.append(post.find('a', 'content-feed__link')['href'])
+            post_rating = post.find('span', 'vote__value__v').text
+            post_url = post.find('a', 'content-feed__link')['href']
+            posts_href.append({'url': post_url, 'rating': post_rating})
 
         return posts_href
 

@@ -26,11 +26,14 @@ class PapersWithCodeParser():
         return papers, papers_code
 
     def get_user_papers(self, soup):
-        papers = soup.findAll('div', 'entity')
+        papers = soup.findAll('div', 'entity') # Для извлечения ссылок на статьи
+        papers_rating = soup.findAll('div', 'entity-stars') # Для извлечения рейтинга статей
+
         papers_href = []
-        for paper in papers:
-            href = 'https://paperswithcode.com' + paper.find('a')['href']
-            papers_href.append(href)
+        for i, paper in enumerate(papers):
+            post_url = 'https://paperswithcode.com' + paper.find('a')['href']
+            post_rating = papers_rating[i].text.strip()
+            papers_href.append({'url': post_url, 'rating': post_rating})
 
         return papers_href
 

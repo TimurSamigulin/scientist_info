@@ -34,7 +34,7 @@ class MediumParcer():
             href = tag.a['href']
             if href:
                 if href[0] == '/':
-                    posts_href.append(f'https://medium.com/{href}')
+                    posts_href.append(f'https://medium.com{href}')
                 else:
                     posts_href.append(href)
 

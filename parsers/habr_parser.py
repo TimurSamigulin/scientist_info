@@ -63,7 +63,9 @@ class HabrParser():
 
         posts_href = []
         for post in posts:
-            posts_href.append('https://habr.com' + post.div.h2.a['href'])
+            post_url = 'https://habr.com' + post.div.h2.a['href']
+            post_rating = post.find('span', 'tm-votes-meter__value').text
+            posts_href.append({'url': post_url, 'rating': post_rating})
 
         return posts_href
 
