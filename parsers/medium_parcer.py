@@ -1,9 +1,7 @@
 import requests
 import logging
 from bs4 import BeautifulSoup
-import re
-import json
-from selenium import webdriver
+from parsers.my_exceptions import page_not_found
 
 
 class MediumParcer():
@@ -42,6 +40,10 @@ class MediumParcer():
 
         return posts_href
 
+    def check_real_page(self, soup, tag):
+        if soup.findAll(string='PAGE NOT FOUND'):
+            raise page_not_found.PageNotFound(tag)
+
     def get_user_info(self, tag):
         """
         Получаем список постов пользователя
@@ -50,6 +52,13 @@ class MediumParcer():
         """
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
+
+        try:
+            self.check_real_page(soup, tag)
+        except page_not_found.PageNotFound:
+            logger.info(f'Страница пользователя {tag} не найдена')
+            raise
+
         info = {}
         info['posts'] = self.get_user_posts(soup)
 
@@ -62,7 +71,8 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     medium_parcer = MediumParcer()
-    print(medium_parcer.get_user_info('@zhlli'))
+    print(medium_parcer.get_user_info('@zhll'))
+    # print(medium_parcer.get_user_info('@zhlli'))
 
 
 if __name__ == 'medium_parcer':

@@ -94,7 +94,7 @@ class HabrParser():
         url = self.get_url(tag)
         soup = self.get_profile_html(url)
         try:
-            self.check_real_page(soup, tag=tag)
+            self.check_real_page(soup, tag)
         except page_not_found.PageNotFound:
             logger.info(f'Страница пользователя {tag} не найдена')
             raise
