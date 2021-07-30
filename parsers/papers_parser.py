@@ -8,22 +8,46 @@ class PapersParser():
 
     def get_habr_user_info(self, tag):
         habr_parser = HabrParser()
-        user_info = habr_parser.get_user_info(tag)
+
+        try:
+            user_info = habr_parser.get_user_info(tag)
+        except AttributeError as a:
+            logger.info(f"Видимо DOM у habr изменился, либо надо проверить ссылку. {a}")
+            raise
+
         return user_info
 
     def get_medium_user_info(self, tag):
         medium_parser = MediumParcer()
-        user_info = medium_parser.get_user_info(tag)
+
+        try:
+            user_info = medium_parser.get_user_info(tag)
+        except AttributeError as a:
+            logger.info(f"Видимо DOM у medium изменился, либо надо проверить ссылку. {a}")
+            raise
+
         return user_info
 
     def get_vcru_user_info(self, tag):
         vcru_parser = VcRuParser()
-        user_info = vcru_parser.get_user_info(tag)
+
+        try:
+            user_info = vcru_parser.get_user_info(tag)
+        except AttributeError as a:
+            logger.info(f"Видимо DOM у vc ru изменился, либо надо проверить ссылку. {a}")
+            raise
+
         return user_info
 
     def get_papers_with_code_info(self, tag):
         papers_with_code = PapersWithCodeParser()
-        user_info = papers_with_code.get_user_info(tag)
+
+        try:
+            user_info = papers_with_code.get_user_info(tag)
+        except AttributeError as a:
+            logger.info(f"Видимо DOM у papers with code изменился, либо надо проверить ссылку. {a}")
+            raise
+
         return user_info
 
 if __name__ == '__main__':
