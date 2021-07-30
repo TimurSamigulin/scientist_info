@@ -128,13 +128,16 @@ class HabrParser():
 
 
         info = {}
+        info['profile_url'] = url
+
         counters = self.get_user_counters(soup)
         for k, v in counters.items():
             info[k] = v
 
         summary = self.get_user_profile_summary(soup)
-        for k, v in summary.items():
-            info[k] = v
+        info['summary'] = summary
+        # for k, v in summary.items():
+        #     info[k] = v
 
         #меняем url, так как посты на другой странице
         url += '/posts/'

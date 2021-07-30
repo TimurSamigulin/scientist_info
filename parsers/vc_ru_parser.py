@@ -110,6 +110,7 @@ class VcRuParser():
             return None
 
         info = {}
+        info['profile_url'] = url
         summary = self.get_user_profile_summary(soup)
         for k, v in summary.items():
             info[k] = v

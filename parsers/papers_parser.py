@@ -7,6 +7,11 @@ from parsers.papers_with_code_parser import PapersWithCodeParser
 class PapersParser():
 
     def get_habr_user_info(self, tag):
+        """
+        Получить информацию о пользователе с хабра
+        :param tag: url или ник пользователя на Хабре
+        :return: словарь с параметрами и постами
+        """
         habr_parser = HabrParser()
 
         try:
@@ -18,6 +23,11 @@ class PapersParser():
         return user_info
 
     def get_medium_user_info(self, tag):
+        """
+        Получить информацию о пользователе с medium
+        :param tag: ссылка или тэг
+        :return: словарь с постами
+        """
         medium_parser = MediumParcer()
 
         try:
@@ -29,6 +39,11 @@ class PapersParser():
         return user_info
 
     def get_vcru_user_info(self, tag):
+        """
+        Получить информацию о пользователе с vc ru
+        :param tag: ссылка на профиль или тэг
+        :return: словарь с инфой и постами
+        """
         vcru_parser = VcRuParser()
 
         try:
@@ -40,6 +55,11 @@ class PapersParser():
         return user_info
 
     def get_papers_with_code_info(self, tag):
+        """
+        Получить информацию о пользователе с papers with code
+        :param tag: ссылка на профиль или тэг
+        :return: информация о пользователе и посты
+        """
         papers_with_code = PapersWithCodeParser()
 
         try:

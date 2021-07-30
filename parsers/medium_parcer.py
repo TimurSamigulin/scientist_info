@@ -29,7 +29,6 @@ class MediumParcer():
 
     def get_user_posts(self, soup):
         h1 = soup.findAll('h1')
-
         posts_href = []
         for tag in h1:
             href = tag.a['href']
@@ -84,6 +83,7 @@ class MediumParcer():
             return None
 
         info = {}
+        info['profile_url'] = url
         info['posts'] = self.get_user_posts(soup)
 
         return info

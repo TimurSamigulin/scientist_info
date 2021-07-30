@@ -68,7 +68,7 @@ class PapersWithCodeParser():
         soup = self.get_profile_html(url)
 
         info = {}
-        info['tag'] = tag
+        info['profile_url'] = url
         papers, papers_code = self.get_user_counters(soup)
         info['papers'] = papers
         info['papers_with_code'] = papers_code
