@@ -19,7 +19,8 @@ class PapersParser():
         except AttributeError as a:
             logger.info(f"Видимо DOM у habr изменился, либо надо проверить ссылку. {a}")
             raise
-
+        #logger.info(tag)
+        #logger.info(str(user_info))
         return user_info
 
     def get_medium_user_info(self, tag):
@@ -76,7 +77,12 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     papers_parser = PapersParser()
-    print(papers_parser.get_habr_user_info('VictoriaSeredina'))
+    print(papers_parser.get_habr_user_info('https://habr.com/ru/users/mitya_k'))
     print(papers_parser.get_medium_user_info('@zhlli'))
     print(papers_parser.get_vcru_user_info('781084-masha-cepeleva'))
     print(papers_parser.get_papers_with_code_info('Oriol Vinyals'))
+
+if __name__ == 'papers_parser':
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(name)s %(levelname)s:%(message)s')
+    logger = logging.getLogger(__name__)

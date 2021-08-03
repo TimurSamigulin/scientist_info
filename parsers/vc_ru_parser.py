@@ -41,10 +41,10 @@ class VcRuParser():
         info = json.loads(info)['header']
 
         summary['name'] = info['subsiteData']['name']
-        summary['karma'] = info['subsiteData']['karma']
-        summary['count'] = info['subsiteData']['subscribers']['count']
+        summary['karma'] = int(info['subsiteData']['karma'])
+        summary['count'] = int(info['subsiteData']['subscribers']['count'])
         summary['label'] = info['stats'][0]['label']
-        summary['posts_counter'] = info['tabs'][0]['counter']
+        summary['posts_counter'] = int(info['tabs'][0]['counter'])
 
         return summary
 
@@ -59,7 +59,7 @@ class VcRuParser():
         for post in posts:
             post_rating = post.find('span', 'vote__value__v').text
             post_url = post.find('a', 'content-feed__link')['href']
-            posts_href.append({'url': post_url, 'rating': post_rating})
+            posts_href.append({'url': post_url, 'rating': int(post_rating)})
 
         return posts_href
 

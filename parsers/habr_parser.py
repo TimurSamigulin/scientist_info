@@ -31,8 +31,8 @@ class HabrParser():
         """
         counters = {}
 
-        counters['carma'] = soup.find('div', 'tm-karma__votes').text.strip()
-        counters['rating'] = soup.find('div', 'tm-rating__counter').text.strip()
+        counters['carma'] = float(soup.find('div', 'tm-karma__votes').text.strip())
+        counters['rating'] = float(soup.find('div', 'tm-rating__counter').text.strip())
         # counters['followers'] = soup.find(href="https://habr.com/ru/users/pawnhearts/subscription/followers/").div.text
         # counters['follow'] = soup.find(href="https://habr.com/ru/users/pawnhearts/subscription/follow/").div.text
 
@@ -51,7 +51,23 @@ class HabrParser():
         for dl in summary_dl:
             summary[dl.dt.text] = dl.dd.text.strip()
 
-        return summary
+        user_info = {}
+
+        for key, item in summary.items():
+            if 'рейтинг' in key.lower():
+                user_info['rating_place'] = item
+            elif 'откуда' in key.lower():
+                user_info['location'] = item
+            elif 'работает' in key.lower():
+                user_info['job'] = item
+            elif 'рождения' in key.lower():
+                user_info['birthday'] = item
+            elif 'зарегистрирован' in key.lower():
+                user_info['registered'] = item
+            elif 'активность' in key.lower():
+                user_info['last_activity'] = item
+
+        return user_info
 
     def get_user_posts(self, soup):
         """
@@ -66,7 +82,7 @@ class HabrParser():
         for post in posts:
             post_url = 'https://habr.com' + post.div.h2.a['href']
             post_rating = post.find('span', 'tm-votes-meter__value').text
-            posts_href.append({'url': post_url, 'rating': post_rating})
+            posts_href.append({'url': post_url, 'rating': int(post_rating)})
 
         return posts_href
 
@@ -135,7 +151,8 @@ class HabrParser():
             info[k] = v
 
         summary = self.get_user_profile_summary(soup)
-        info['summary'] = summary
+        for key, item in summary.items():
+            info[key] = item
         # for k, v in summary.items():
         #     info[k] = v
 

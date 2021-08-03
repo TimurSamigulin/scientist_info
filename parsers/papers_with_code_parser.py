@@ -33,7 +33,11 @@ class PapersWithCodeParser():
         papers_href = []
         for i, paper in enumerate(papers):
             post_url = 'https://paperswithcode.com' + paper.find('a')['href']
-            post_rating = papers_rating[i].text.strip()
+            post_rating = papers_rating[i].text.strip().replace(',', '')
+            if post_rating == '':
+                post_rating = 0
+            else:
+                post_rating = int(post_rating)
             papers_href.append({'url': post_url, 'rating': post_rating})
 
         return papers_href
@@ -70,8 +74,8 @@ class PapersWithCodeParser():
         info = {}
         info['profile_url'] = url
         papers, papers_code = self.get_user_counters(soup)
-        info['papers'] = papers
-        info['papers_with_code'] = papers_code
+        info['papers'] = int(papers)
+        info['papers_with_code'] = int(papers_code)
         info['papers_url'] = self.get_user_papers(soup)
 
         return info

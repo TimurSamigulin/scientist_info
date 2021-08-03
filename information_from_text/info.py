@@ -384,9 +384,9 @@ if __name__ == '__main__':
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
 
-    path = '../data/new_ru_en_space'
+    path = 'data/foreign-dataset/'
     files = get_files(path)
-    write_info(files, 'data/output-new_ru_en_space/')
+    write_info(files, 'data/output-test/')
 
     exit()
 
