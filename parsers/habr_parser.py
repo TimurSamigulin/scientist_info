@@ -144,7 +144,7 @@ class HabrParser():
 
 
         info = {}
-        info['profile_url'] = url
+        info['url'] = url
 
         counters = self.get_user_counters(soup)
         for k, v in counters.items():

@@ -83,7 +83,7 @@ class MediumParcer():
             return None
 
         info = {}
-        info['profile_url'] = url
+        info['url'] = url
         info['posts'] = self.get_user_posts(soup)
 
         return info

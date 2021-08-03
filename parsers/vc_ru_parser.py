@@ -59,6 +59,10 @@ class VcRuParser():
         for post in posts:
             post_rating = post.find('span', 'vote__value__v').text
             post_url = post.find('a', 'content-feed__link')['href']
+
+            if post_rating == '—':
+                post_rating = 0
+
             posts_href.append({'url': post_url, 'rating': int(post_rating)})
 
         return posts_href
@@ -110,7 +114,7 @@ class VcRuParser():
             return None
 
         info = {}
-        info['profile_url'] = url
+        info['url'] = url
         summary = self.get_user_profile_summary(soup)
         for k, v in summary.items():
             info[k] = v
