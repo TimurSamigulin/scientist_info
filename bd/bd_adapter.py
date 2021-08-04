@@ -1,6 +1,10 @@
 from bd.sql_connector import Connector
 
+
 class BD_Adapter():
+    """
+    Адаптер для работы с базы
+    """
 
     def __init__(self, db_name, user, password, host, port):
         self.__db_name = db_name
@@ -26,8 +30,7 @@ class BD_Adapter():
         else:
             return
 
-
-        #Записываем инфу о пользователе
+        # Записываем инфу о пользователе
         columns = ['scopus_author_id']
         values = [author_id]
 
@@ -98,8 +101,10 @@ class BD_Adapter():
         table_scopus_author_phone = 'scopus_author_phone'
         table_scopus_author_url = 'scopus_author_url'
 
-        all_columns = ['depart', 'faculty', 'designation', 'teaching_area', 'book_chapter', 'research', 'membership', 'employment', 'overview',
-                       'qualification', 'about_me', 'contact', 'biography', 'journals', 'conferences', 'publications',  'staff', 'info']
+        all_columns = ['depart', 'faculty', 'designation', 'teaching_area', 'book_chapter', 'research', 'membership',
+                       'employment', 'overview',
+                       'qualification', 'about_me', 'contact', 'biography', 'journals', 'conferences', 'publications',
+                       'staff', 'info']
         columns = ['scopus_author_id', 'url']
         values = [scopus_author_id, url]
 
