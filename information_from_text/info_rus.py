@@ -3,7 +3,6 @@ import logging
 import os
 import io
 import re
-from information_from_text.info import get_files
 
 class InformationRus(Information):
 
@@ -53,49 +52,12 @@ class InformationRus(Information):
         return self.check_section(tokens, sections)
 
 
-def write_info(files, outputpath):
-    """
-    получаем инфо со страницы и запись в файл
-    :param files:
-    :return:
-    """
-    for name, path in files.items():
-        logger.info(f'name = {name}')
-        for file in path:
-            f = io.open(file, encoding='utf-8')
-            text = f.read()
-
-            dirpath = outputpath + name
-
-            if not os.path.exists(dirpath):
-                os.makedirs(dirpath)
-
-            rus = re.findall(r"[А-Яа-я]", text)
-            if len(rus) > 30:
-                info = information_rus.get_info(text, name)
-            else:
-                info = information.get_info(text, name)
-
-            wpath = dirpath + '/' + file.split('/')[-1]
-            with open(wpath, 'w', encoding='utf-8') as fw:
-                for key, item in info.items():
-                    if (item != 'None') or (item.strip() != ''):
-                        fw.write(f"{key}:\n{item}\n")
-
-            f.close()
-            fw.close()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
 
-    information = Information()
-    information_rus = InformationRus()
-
-    path = '../data/ru-4'
-    files = get_files(path)
-    write_info(files, 'data/output-ru-4/')
 
     exit()
 

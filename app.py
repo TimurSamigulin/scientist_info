@@ -63,7 +63,8 @@ def parser_from_site(url: str, author_id: int):
         except AttributeError as a:
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
-
+        if not habr_info:
+            return {'text_response': {'message': f'Ничего не вернулось, возможно {url} ведет не на профиль или структура сайта сменилась'}}
         result = adapter.insert_author_info('habr', habr_info, author_id)
         if result:
             return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
@@ -77,6 +78,9 @@ def parser_from_site(url: str, author_id: int):
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
+        if not medium_info:
+            return {'text_response': {'message': f'Ничего не вернулось, возможно {url} ведет не на профиль или структура сайта сменилась'}}
+
         result = adapter.insert_author_info('medium', medium_info, author_id)
         if result:
             return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
@@ -89,6 +93,9 @@ def parser_from_site(url: str, author_id: int):
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
+        if not vr_ru_info:
+            return {'text_response': {'message': f'Ничего не вернулось, возможно {url} ведет не на профиль или структура сайта сменилась'}}
+
         result = adapter.insert_author_info('vc', vr_ru_info, author_id)
         if result:
             return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
@@ -100,6 +107,9 @@ def parser_from_site(url: str, author_id: int):
         except AttributeError as a:
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
+
+        if not paper_info:
+            return {'text_response': {'message': f'Ничего не вернулось, возможно {url} ведет не на профиль или структура сайта сменилась'}}
 
         result = adapter.insert_author_info('paper_with_code', paper_info, author_id)
         if result:
