@@ -1,30 +1,66 @@
+import re
+import json
 from fastapi import FastAPI
-from bd.bd_adapter import BD_Adapter
 
+from information_from_text.info import Information
+from information_from_text.info_rus import InformationRus
+from information_from_text.google_trans import GoogleTranslator
+from bd.bd_adapter import BD_Adapter
+from parsers.sites_text_parser import SitesParser
 from parsers.papers_parser import PapersParser
 
 app = FastAPI()
+
 
 @app.get('/')
 def index():
     return {'text_response': {'message': 'main page of scientist info'}}
 
 
+def get_info(text, fio):
+    information_en = Information()
+    information_ru = InformationRus()
+
+    translator = GoogleTranslator()
+
+    rus = re.findall(r"[А-Яа-я]", text)
+    if len(rus) > 30:
+        if len(re.findall(r"[А-Яа-я]", fio)) > 1:
+            fio = translator.translate_one(fio)
+        info = information_ru.get_info(text, fio)
+    else:
+        info = information_en.get_info(text, fio)
+
+    return info
+
+
 @app.get('/get_info_from_text/')
 def get_info_from_text(url: str, fio: str, scopus_author_id: int):
-    pass
+    text = SitesParser.get_page_text(url)
+    info = get_info(text, fio)
+
+    with open('config', 'r') as cfg_file:
+        config = json.load(cfg_file)
+    adapter = BD_Adapter(config['database'], config['user'], config['password'], config['host'], config['port'])
+    adapter.insert_info_from_text(url, text, fio, scopus_author_id)
+
+    return info
 
 
 @app.get('/parser_from_site/')
 def parser_from_site(url: str, author_id: int):
     parser = PapersParser()
-    adapter = BD_Adapter()
+
+    with open('config', 'r') as cfg_file:
+        config = json.load(cfg_file)
+    adapter = BD_Adapter(config['database'], config['user'], config['password'], config['host'], config['port'])
 
     if 'habr' in url:
         try:
             habr_info = parser.get_habr_user_info(url)
         except AttributeError as a:
-            return {'text_response': {'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
+            return {'text_response': {
+                'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
         adapter.insert_author_info('habr', habr_info, author_id)
         return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
@@ -32,7 +68,8 @@ def parser_from_site(url: str, author_id: int):
         try:
             medium_info = parser.get_medium_user_info(url)
         except AttributeError as a:
-            return {'text_response': {'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
+            return {'text_response': {
+                'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
         adapter.insert_author_info('medium', medium_info, author_id)
         return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
@@ -40,7 +77,8 @@ def parser_from_site(url: str, author_id: int):
         try:
             vr_ru_info = parser.get_vcru_user_info(url)
         except AttributeError as a:
-            return {'text_response': {'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
+            return {'text_response': {
+                'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
         adapter.insert_author_info('vc', vr_ru_info, author_id)
         return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
@@ -48,10 +86,10 @@ def parser_from_site(url: str, author_id: int):
         try:
             paper_info = parser.get_papers_with_code_info(url)
         except AttributeError as a:
-            return {'text_response': {'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
+            return {'text_response': {
+                'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
         adapter.insert_author_info('paper_with_code', paper_info, author_id)
         return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
     else:
         return {'text_response': {'message': f'Ссылка не релевантная {url}'}}
-

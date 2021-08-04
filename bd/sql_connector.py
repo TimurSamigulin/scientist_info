@@ -2,13 +2,6 @@ from mysql.connector import connect
 import mysql.connector
 
 class Connector:
-    db_config = dict(
-        user='root',
-        password='example',
-        host='10.7.4.10',
-        port=3306,
-        database='exclusive'
-    )
 
     def __init__(self, db_name, user, password, host, port):
         self.__db_name = db_name
@@ -16,7 +9,6 @@ class Connector:
         self.__password = password
         self.__host = host
         self.__port = port
-        # self.connection = mysql.connector.connect(**self.db_config)
 
 
     def insert_data(self, table_name, columns, values, ignore=False):
@@ -51,7 +43,7 @@ class Connector:
                     result = cursor.fetchall() if fetch else None
                     if commit:
                         connection.commit()
-                    lastid = cursor.lastrowid
+
                     return cursor.lastrowid
                 except Exception as e:
                     raise e

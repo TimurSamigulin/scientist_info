@@ -2,6 +2,14 @@ from bd.sql_connector import Connector
 
 class BD_Adapter():
 
+    def __init__(self, db_name, user, password, host, port):
+        self.__db_name = db_name
+        self.__user = user
+        self.__password = password
+        self.__host = host
+        self.__port = port
+        self.db_connection = Connector(self.__db_name, self.__user, self.__password, self.__host, self.__port)
+
     def insert_author_info(self, site, info, author_id):
         if site == 'habr':
             table_name = 'scopus_author_habr'
@@ -19,17 +27,6 @@ class BD_Adapter():
             return
 
 
-        #Конектимся к бд
-        db_config = dict(
-            user='root',
-            password='example',
-            host='10.7.4.10',
-            port=3306,
-            database='exclusive'
-        )
-
-        db_connection = Connector(db_config['database'], db_config['user'], db_config['password'], db_config['host'],
-                                  db_config['port'])
         #Записываем инфу о пользователе
         columns = ['scopus_author_id']
         values = [author_id]
@@ -60,7 +57,7 @@ class BD_Adapter():
         columns = tuple(columns)
         values = tuple(values)
 
-        id = db_connection.insert_data(table_name, columns, values)
+        id = self.db_connection.insert_data(table_name, columns, values)
 
         # Вставляем посты
         if info.get('posts', False):
@@ -90,4 +87,7 @@ class BD_Adapter():
             for post in posts:
                 posts_value.append((id, post))
         for post in posts_value:
-            db_connection.insert_data(table_name_post, posts_columns, post)
+            self.db_connection.insert_data(table_name_post, posts_columns, post)
+
+    def insert_info_from_text(self, url, text, fio, scopus_author_id):
+        pass

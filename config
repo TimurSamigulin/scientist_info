@@ -1,0 +1,7 @@
+{
+    "user": "root",
+    "password": "example",
+    "host": "10.7.4.10",
+    "port": 3306,
+    "database":  "exclusive"
+}

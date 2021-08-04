@@ -4,7 +4,7 @@ import io
 import logging
 import json
 from information_from_text.tokenizers import Tokenizers
-from information_from_text import info_rus
+#from information_from_text import info_rus
 from information_from_text.google_trans import GoogleTranslator
 
 class Information:
@@ -357,7 +357,7 @@ def write_info(files, outputpath):
             text = f.read()
 
             information = Information()
-            information_rus = info_rus.InformationRus()
+            #information_rus = info_rus.InformationRus()
             translator = GoogleTranslator()
 
             dirpath = outputpath + name
@@ -368,7 +368,7 @@ def write_info(files, outputpath):
             rus = re.findall(r"[А-Яа-я]", text)
             if len(rus) > 30:
                 name = translator.translate_one(name)
-                info = information_rus.get_info(text, name)
+            #    info = information_rus.get_info(text, name)
             else:
                 info = information.get_info(text, name)
 
