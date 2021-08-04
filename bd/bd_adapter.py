@@ -65,7 +65,7 @@ class BD_Adapter():
         elif info.get('papers_url', False):
             posts = info.get('papers_url')
         else:
-            return
+            return 1
 
         id_name = f'{site}_id'
         if isinstance(posts[0], dict):
@@ -86,8 +86,73 @@ class BD_Adapter():
             )
             for post in posts:
                 posts_value.append((id, post))
+
         for post in posts_value:
             self.db_connection.insert_data(table_name_post, posts_columns, post)
 
-    def insert_info_from_text(self, url, text, fio, scopus_author_id):
-        pass
+        return 1
+
+    def insert_info_from_text(self, url, info, fio, scopus_author_id):
+        table_scopus_author_info = 'scopus_author_info'
+        table_scopus_author_email = 'scopus_author_email'
+        table_scopus_author_phone = 'scopus_author_phone'
+        table_scopus_author_url = 'scopus_author_url'
+
+        all_columns = ['depart', 'faculty', 'designation', 'teaching_area', 'book_chapter', 'research', 'membership', 'employment', 'overview',
+                       'qualification', 'about_me', 'contact', 'biography', 'journals', 'conferences', 'publications',  'staff', 'info']
+        columns = ['scopus_author_id', 'url']
+        values = [scopus_author_id, url]
+
+        for column in all_columns:
+            if info.get(column, 0):
+                columns.append(column)
+                values.append(info.get(column))
+
+        columns = tuple(columns)
+        values = tuple(values)
+
+        id = self.db_connection.insert_data(table_scopus_author_info, columns, values)
+
+        if info.get('emails', 0):
+            emails = info.get('emails').split(';')
+            columns = (
+                'author_info_id',
+                'email'
+            )
+            values = []
+            for email in emails:
+                values.append((id, email))
+
+            if len(values) > 0:
+                for value in values:
+                    self.db_connection.insert_data(table_scopus_author_email, columns, value)
+
+        if info.get('phones', 0):
+            phones = info.get('phones').split(';')
+            columns = (
+                'author_info_id',
+                'phone'
+            )
+            values = []
+            for phone in phones:
+                values.append((id, phone))
+
+            if len(values) > 0:
+                for value in values:
+                    self.db_connection.insert_data(table_scopus_author_phone, columns, value)
+
+        if info.get('urls', 0):
+            urls = info.get('urls').split(';')
+            columns = (
+                'author_info_id',
+                'url'
+            )
+            values = []
+            for url in urls:
+                values.append((id, url))
+
+            if len(values) > 0:
+                for value in values:
+                    self.db_connection.insert_data(table_scopus_author_url, columns, value)
+
+        return 1

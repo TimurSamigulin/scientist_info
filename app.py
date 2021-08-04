@@ -42,9 +42,11 @@ def get_info_from_text(url: str, fio: str, scopus_author_id: int):
     with open('config', 'r') as cfg_file:
         config = json.load(cfg_file)
     adapter = BD_Adapter(config['database'], config['user'], config['password'], config['host'], config['port'])
-    adapter.insert_info_from_text(url, text, fio, scopus_author_id)
-
-    return info
+    result = adapter.insert_info_from_text(url, info, fio, scopus_author_id)
+    if result == 1:
+        return {'text_response': {'message': f'Все отлично! Пользователь {fio} добавлен в базу'}}
+    else:
+        return {'text_response': {'message': f'Что-то не сохранилось в базу {info}'}}
 
 
 @app.get('/parser_from_site/')
@@ -62,8 +64,12 @@ def parser_from_site(url: str, author_id: int):
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
-        adapter.insert_author_info('habr', habr_info, author_id)
-        return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        result = adapter.insert_author_info('habr', habr_info, author_id)
+        if result:
+            return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        else:
+            return {'text_response': {'message': f'Что-то не так {url} не был добавлен в базу'}}
+
     elif 'medium' in url:
         try:
             medium_info = parser.get_medium_user_info(url)
@@ -71,8 +77,11 @@ def parser_from_site(url: str, author_id: int):
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
-        adapter.insert_author_info('medium', medium_info, author_id)
-        return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        result = adapter.insert_author_info('medium', medium_info, author_id)
+        if result:
+            return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        else:
+            return {'text_response': {'message': f'Что-то не так {url} не был добавлен в базу'}}
     elif 'vc.ru' in url:
         try:
             vr_ru_info = parser.get_vcru_user_info(url)
@@ -80,8 +89,11 @@ def parser_from_site(url: str, author_id: int):
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
-        adapter.insert_author_info('vc', vr_ru_info, author_id)
-        return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        result = adapter.insert_author_info('vc', vr_ru_info, author_id)
+        if result:
+            return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        else:
+            return {'text_response': {'message': f'Что-то не так {url} не был добавлен в базу'}}
     elif 'paperswithcode' in url:
         try:
             paper_info = parser.get_papers_with_code_info(url)
@@ -89,7 +101,10 @@ def parser_from_site(url: str, author_id: int):
             return {'text_response': {
                 'message': f'Видимо DOM у papers with code изменился, либо надо проверить ссылку {url}'}}
 
-        adapter.insert_author_info('paper_with_code', paper_info, author_id)
-        return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        result = adapter.insert_author_info('paper_with_code', paper_info, author_id)
+        if result:
+            return {'text_response': {'message': f'Все отлично! Пользователь {url} добавлен в базу'}}
+        else:
+            return {'text_response': {'message': f'Что-то не так {url} не был добавлен в базу'}}
     else:
         return {'text_response': {'message': f'Ссылка не релевантная {url}'}}

@@ -239,9 +239,9 @@ class Information:
                 token = self.delete_space(token)
                 if section in token:
                     if info.get(section, False):
-                        info[section] += ' \n' + token
+                        info[section.replace(' ', '_')] += ' \n' + token
                     else:
-                        info[section] = token
+                        info[section.replace(' ', '_')] = token
 
                     # if info.get(section, False):
                     #     try:
@@ -313,80 +313,13 @@ class Information:
         return info
 
 
-def get_files(path, size_skip_KB=400):
-    """
-    Получаем список файлов с информацией об ученых
-    :param path: путь до нужной директории с папками ученых
-    :param size_skip_KB: максимальный порог размера файлов в КБ, после которого мы пропускаем файлы
-    :return: словарь ученный: list файлов с информацией
-    """
 
-    dirs = os.listdir(path=path)
-
-    files_dict = {}
-    for dir in dirs:
-        files = os.listdir(path=path + '/' + dir)
-        for file in files:
-            if file.split('.')[-1] in ['txt']:
-                file_path = f'{path}/{dir}/{file}'
-
-                # Пропускам файлы больше 400 КБ
-                file_size = os.path.getsize(file_path)
-                size_skip_KB *= 1000
-                if file_size > size_skip_KB:
-                    continue
-
-                if files_dict.get(dir, False):
-                    files_dict[dir].append(file_path)
-                else:
-                    files_dict[dir] = [file_path]
-
-    return files_dict
-
-
-def write_info(files, outputpath):
-    """
-    получаем инфо со страницы и запись в файл
-    :param files:
-    :return:
-    """
-    for name, path in files.items():
-        logger.info(f'name = {name}')
-        for file in path:
-            f = io.open(file, encoding='utf-8')
-            text = f.read()
-
-            information = Information()
-            #information_rus = info_rus.InformationRus()
-            translator = GoogleTranslator()
-
-            dirpath = outputpath + name
-
-            if not os.path.exists(dirpath):
-                os.makedirs(dirpath)
-
-            rus = re.findall(r"[А-Яа-я]", text)
-            if len(rus) > 30:
-                name = translator.translate_one(name)
-            #    info = information_rus.get_info(text, name)
-            else:
-                info = information.get_info(text, name)
-
-            wpath = dirpath + '/' + file.split('/')[-1]
-            with open(wpath, 'w', encoding='utf-8') as fw:
-                fw.write(json.dumps(info, indent=4, ensure_ascii=False))
-
-            f.close()
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)s %(levelname)s:%(message)s')
     logger = logging.getLogger(__name__)
-
-    path = 'data/foreign-dataset/'
-    files = get_files(path)
-    write_info(files, 'data/output-test/')
 
     exit()
 
